@@ -44,8 +44,6 @@
     .msg.processing{background:#1e3a8a;color:#93c5fd;border:1px solid#1e40af}
     @media(max-width:900px){.main{grid-template-columns:1fr}}
   </style>
-  <script src="/api/config.js"></script>
-  <script src="https://js.authorize.net/v3/AcceptUI.js"></script>
 </head>
 <body>
   <div class="wrap">
@@ -120,17 +118,7 @@
             <label>Phone</label>
             <input id="phone" type="tel">
 
-            <button
-              class="cta"
-              id="accept-ui-btn"
-              type="button"
-              data-billingAddressOptions='{"show":true,"required":true}'
-              data-apiLoginID=""
-              data-clientKey=""
-              data-acceptUIFormBtnText="Complete Order"
-              data-acceptUIFormHeaderTxt="Secure Payment"
-              data-paymentOptions='{"showCreditCard":true,"showBankAccount":false}'
-            >Complete Secure Order</button>
+            <button class="cta" type="button" id="complete-order-btn">Complete Secure Order</button>
 
             <div class="trust">
               <span>🔒 256-Bit SSL Encryption</span>
@@ -178,7 +166,6 @@
     let bumpAdded = false;
     const shippingFee = 4.95;
 
-    // Package selection
     document.getElementById('packages').addEventListener('click', (e) => {
       const pkg = e.target.closest('.pkg');
       if (!pkg) return;
@@ -193,7 +180,6 @@
       updateSummary();
     });
 
-    // Order bump
     document.getElementById('bumpCheck').addEventListener('change', (e) => {
       bumpAdded = e.target.checked;
       updateSummary();
@@ -204,11 +190,7 @@
       document.getElementById('sum-pkg-price').textContent = '$' + selectedPkg.price.toFixed(2);
       
       const bumpRow = document.getElementById('sum-bump-row');
-      if (bumpAdded) {
-        bumpRow.style.display = 'flex';
-      } else {
-        bumpRow.style.display = 'none';
-      }
+      bumpRow.style.display = bumpAdded ? 'flex' : 'none';
 
       const shipping = selectedPkg.qty === 1 ? shippingFee : 0;
       document.getElementById('sum-ship').textContent = shipping === 0 ? 'FREE' : '$' + shipping.toFixed(2);
@@ -217,82 +199,27 @@
       document.getElementById('sum-total').textContent = '$' + total.toFixed(2);
     }
 
-    // Payment processing
-    document.addEventListener('paymentFormUpdate', async function(e) {
-      const statusEl = document.getElementById('status');
-      statusEl.style.display = 'block';
+    document.getElementById('complete-order-btn').addEventListener('click', function() {
+      const firstName = document.getElementById('firstName').value;
+      const lastName = document.getElementById('lastName').value;
+      const email = document.getElementById('email').value;
       
-      if (!e || !e.detail || !e.detail.response) {
-        statusEl.className = 'msg error';
-        statusEl.textContent = '❌ Payment modal did not return data.';
+      if (!firstName || !lastName || !email) {
+        alert('Please fill in all required fields');
         return;
       }
 
-      const { opaqueData } = e.detail.response;
-      if (!opaqueData || !opaqueData.dataValue) {
-        statusEl.className = 'msg error';
-        statusEl.textContent = '❌ Missing payment token. Please try again.';
-        return;
-      }
-
-      const shipping = selectedPkg.qty === 1 ? shippingFee : 0;
-      const amount = selectedPkg.price + (bumpAdded ? bumpPrice : 0) + shipping;
-
-      const payload = {
-        amount: amount,
-        firstName: document.getElementById('firstName').value,
-        lastName: document.getElementById('lastName').value,
-        email: document.getElementById('email').value,
+      sessionStorage.setItem('customer', JSON.stringify({
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
         phone: document.getElementById('phone').value,
-        packageQty: selectedPkg.qty,
-        orderBump: bumpAdded,
-        opaqueData
-      };
+        package: selectedPkg.name,
+        total: selectedPkg.price + (bumpAdded ? bumpPrice : 0) + (selectedPkg.qty === 1 ? shippingFee : 0)
+      }));
 
-      statusEl.className = 'msg processing';
-      statusEl.textContent = '⏳ Processing your payment securely...';
-
-      try {
-        const res = await fetch('/api/charge', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        const data = await res.json();
-        
-        if (res.ok) {
-          statusEl.className = 'msg success';
-          statusEl.textContent = '✅ Payment approved! Redirecting...';
-          
-          // Save customer info for upsells
-          sessionStorage.setItem('customer', JSON.stringify({
-            firstName: payload.firstName,
-            lastName: payload.lastName,
-            email: payload.email,
-            phone: payload.phone
-          }));
-          
-          setTimeout(() => {
-            window.location.href = '/thank-you?tid=' + (data.transactionId || '') + '&pkg=' + selectedPkg.qty;
-          }, 1500);
-        } else {
-          statusEl.className = 'msg error';
-          statusEl.textContent = '❌ Payment failed: ' + (data.error || res.statusText);
-        }
-      } catch (err) {
-        statusEl.className = 'msg error';
-        statusEl.textContent = '❌ Network error: ' + err.message;
-      }
+      window.location.href = '/thank-you?pkg=' + selectedPkg.qty;
     });
-
-    // Load Accept.js credentials
-    (function() {
-      const btn = document.getElementById('accept-ui-btn');
-      const login = (typeof window.AUTHNET_API_LOGIN_ID !== 'undefined') ? window.AUTHNET_API_LOGIN_ID : '';
-      const client = (typeof window.AUTHNET_PUBLIC_CLIENT_KEY !== 'undefined') ? window.AUTHNET_PUBLIC_CLIENT_KEY : '';
-      if (login) btn.setAttribute('data-apiLoginID', login);
-      if (client) btn.setAttribute('data-clientKey', client);
-    })();
 
     updateSummary();
   </script>

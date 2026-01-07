@@ -178,7 +178,7 @@
                 <div class="form_mid">
                     <div class="form_text1">As Low as <span>$64.99</span> per month</div>
                     
-                    <form name="opt_in_form" id="opt_in_form" method="GET" action="/checkout.html" class="form_box">
+                    <form name="opt_in_form" id="opt_in_form" method="GET" action="/checkout" class="form_box">
                         <input type="hidden" name="device" value="desktop">
                         <input type="hidden" name="toggleC" value="1">
                         <input type="hidden" name="pgtag" value="dindex">
@@ -1095,7 +1095,7 @@ $(document).ready(function(e) {
 
 <script>(function(){
     // Rewrite "Order Now" links/buttons to local checkout page on Vercel
-    var base='/checkout.html'; // Changed to checkout.html
+    var base='/checkout';
     var sp=new URLSearchParams(window.location.search);
     var qp=new URLSearchParams();
     ['AFFID','prospectId','c1','c2','c3'].forEach(function(k){var v=sp.get(k);if(v){qp.set(k,v);}});

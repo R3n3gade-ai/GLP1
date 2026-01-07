@@ -20,12 +20,7 @@
     .cta:hover{background:#16a34a}
     .cta-decline{background:transparent;border:1px solid #334155;color:#9ca3af}
     .timer{background:#7f1d1d;border:1px solid #991b1b;border-radius:8px;padding:16px;margin:24px auto;max-width:400px;font-size:18px}
-    .msg{margin-top:16px;padding:12px;border-radius:8px;font-size:14px;display:none}
-    .msg.error{background:#7f1d1d;color:#fca5a5;border:1px solid #991b1b}
-    .msg.processing{background:#1e3a8a;color:#93c5fd;border:1px solid #1e40af}
   </style>
-  <script src="/api/config.js"></script>
-  <script src="https://js.authorize.net/v3/AcceptUI.js"></script>
 </head>
 <body>
   <div class="wrap">
@@ -57,26 +52,13 @@
         ⚠️ This offer is only available RIGHT NOW and will not be shown again
       </p>
 
-      <button
-        class="cta"
-        id="accept-ui-btn"
-        type="button"
-        data-billingAddressOptions='{"show":false,"required":false}'
-        data-apiLoginID=""
-        data-clientKey=""
-        data-acceptUIFormBtnText="Add to Order - $49"
-        data-acceptUIFormHeaderTxt="Secure Payment"
-        data-paymentOptions='{"showCreditCard":true,"showBankAccount":false}'
-      >YES! Add Advanced Formula ($49)</button>
-
+      <a href="/thank-you-final?upsell=1" class="cta">YES! Add Advanced Formula ($49)</a>
       <a href="/thank-you-final" class="cta cta-decline">No Thanks, I'll Pass</a>
-
-      <div class="msg" id="status"></div>
     </div>
   </div>
 
   <script>
-    let timeLeft = 600; // 10 minutes
+    let timeLeft = 600;
     const countdownEl = document.getElementById('countdown');
     
     setInterval(() => {
@@ -89,74 +71,6 @@
       const secs = timeLeft % 60;
       countdownEl.textContent = mins + ':' + String(secs).padStart(2, '0');
     }, 1000);
-
-    // Load saved customer info from sessionStorage (if available from checkout)
-    const savedCustomer = JSON.parse(sessionStorage.getItem('customer') || '{}');
-
-    document.addEventListener('paymentFormUpdate', async function(e) {
-      const statusEl = document.getElementById('status');
-      statusEl.style.display = 'block';
-      
-      if (!e || !e.detail || !e.detail.response) {
-        statusEl.className = 'msg error';
-        statusEl.textContent = '❌ Payment modal error. Please try again.';
-        return;
-      }
-
-      const { opaqueData } = e.detail.response;
-      if (!opaqueData || !opaqueData.dataValue) {
-        statusEl.className = 'msg error';
-        statusEl.textContent = '❌ Missing payment token. Please try again.';
-        return;
-      }
-
-      const payload = {
-        amount: 49.00,
-        firstName: savedCustomer.firstName || '',
-        lastName: savedCustomer.lastName || '',
-        email: savedCustomer.email || '',
-        phone: savedCustomer.phone || '',
-        productType: 'upsell-1',
-        opaqueData
-      };
-
-      statusEl.className = 'msg processing';
-      statusEl.textContent = '⏳ Processing upsell...';
-
-      try {
-        const res = await fetch('/api/charge', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        const data = await res.json();
-        
-        if (res.ok) {
-          statusEl.className = 'msg';
-          statusEl.style.background = '#14532d';
-          statusEl.style.color = '#86efac';
-          statusEl.textContent = '✅ Upsell added! Redirecting...';
-          setTimeout(() => {
-            window.location.href = '/thank-you-final?upsell=1';
-          }, 1500);
-        } else {
-          statusEl.className = 'msg error';
-          statusEl.textContent = '❌ Payment failed: ' + (data.error || res.statusText);
-        }
-      } catch (err) {
-        statusEl.className = 'msg error';
-        statusEl.textContent = '❌ Network error: ' + err.message;
-      }
-    });
-
-    // Load Accept.js credentials
-    (function() {
-      const btn = document.getElementById('accept-ui-btn');
-      const login = (typeof window.AUTHNET_API_LOGIN_ID !== 'undefined') ? window.AUTHNET_API_LOGIN_ID : '';
-      const client = (typeof window.AUTHNET_PUBLIC_CLIENT_KEY !== 'undefined') ? window.AUTHNET_PUBLIC_CLIENT_KEY : '';
-      if (login) btn.setAttribute('data-apiLoginID', login);
-      if (client) btn.setAttribute('data-clientKey', client);
-    })();
   </script>
 </body>
 </html>

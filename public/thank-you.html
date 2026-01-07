@@ -18,7 +18,7 @@
     .upsell{background:linear-gradient(135deg,#1e3a8a,#1e40af);border:2px solid #3b82f6;border-radius:12px;padding:24px;margin-top:32px}
     .upsell h2{margin:0 0 12px;color:#93c5fd}
     .upsell-price{font-size:32px;color:#22c55e;font-weight:700;margin:16px 0}
-    .upsell-btns{display:flex;gap:12px;justify-content:center;margin-top:16px}
+    .upsell-btns{display:flex;gap:12px;justify-content:center;margin-top:16px;flex-wrap:wrap}
     .btn-yes{background:#22c55e;color:#052e1b}
     .btn-no{background:transparent;color:#9ca3af;border:1px solid #334155}
   </style>
@@ -31,7 +31,7 @@
       <p style="font-size:18px;color:#9ca3af">Your GlucoBoost order has been confirmed</p>
       
       <div class="tid" id="transaction-info">
-        <div>Transaction ID: <span id="tid">Loading...</span></div>
+        <div>Order ID: <span id="tid">GCB-2024-XXXX</span></div>
         <div>Package: <span id="pkg">Loading...</span></div>
       </div>
 
@@ -61,11 +61,10 @@
 
   <script>
     const params = new URLSearchParams(window.location.search);
-    const tid = params.get('tid') || 'N/A';
     const pkg = params.get('pkg') || '1';
     const pkgNames = { '1': '1 Bottle', '3': '3 Bottles', '6': '6 Bottles' };
     
-    document.getElementById('tid').textContent = tid;
+    document.getElementById('tid').textContent = 'GCB-' + Date.now().toString().slice(-8);
     document.getElementById('pkg').textContent = pkgNames[pkg] || pkg + ' Bottles';
 
     function declineUpsell() {
