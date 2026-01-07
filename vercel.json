@@ -2,8 +2,13 @@
   "rewrites": [
     { "source": "/checkout", "destination": "/public/checkout.html" },
     { "source": "/thank-you", "destination": "/public/thank-you.html" },
-    { "source": "/thank-you-final", "destination": "/public/thank-you-final.html" },
     { "source": "/upsell-1", "destination": "/public/upsell-1.html" },
-    { "source": "/", "destination": "/index.html" }
-  ]
+    { "source": "/thank-you-final", "destination": "/public/thank-you-final.html" }
+  ],
+  "functions": {
+    "api/**/*.js": {
+      "memory": 1024,
+      "maxDuration": 10
+    }
+  }
 }
